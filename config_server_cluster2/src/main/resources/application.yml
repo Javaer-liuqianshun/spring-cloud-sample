@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: config-server
+# Git管理配置
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://gitee.com/didispace/SpringCloud-Learning/
+          search-paths: spring_cloud_in_action/config-repo
+          username:
+          password:
+server:
+  port: 7002
+# 配置服务注册中心
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:1111/eureka/
