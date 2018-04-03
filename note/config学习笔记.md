@@ -19,10 +19,10 @@ server:
   port: 1121
 ```
 >spring.application.name = config-server：服务名称<br>
-spring.cloud.server.git.uri = ttps://gitee.com/didispace/SpringCloud-Learning/：配置git仓库地址<br>
-spring.cloud.server.git.search-paths=spring_cloud_in_action/config-repo：配置文件位于git仓库中的位置<br>
-spring.cloud.server.git.username=  ：用户名<br>
-spring.cloud.server.git.password=  ：密码<br>
+spring.cloud.config.server.git.uri = ttps://gitee.com/didispace/SpringCloud-Learning/：配置git仓库地址<br>
+spring.cloud.config.server.git.search-paths=spring_cloud_in_action/config-repo：配置文件位于git仓库中的位置<br>
+spring.cloud.config.server.git.username=  ：用户名<br>
+spring.cloud.config.server.git.password=  ：密码<br>
 server.port= 1121：项目端口号<br>
 
 ## 访问配置信息URL与配置文件映射关系
@@ -73,3 +73,67 @@ public class TestController {
 ![config-client](http://a3.qpic.cn/psb?/V11X9h921LUmIc/txVrh0aIZ04V7mD5Da3BkWXQ7*zZGygpmdI9QQsFiKo!/c/dDIBAAAAAAAA&ek=1&kp=1&pt=0&bo=3QP5AAAAAAARFwc!&vuin=763667629&tm=1522677600&sce=60-2-2&rf=0-0)
 
 如图可见从 **config-server** 中读取了 **from** 变量
+
+
+# 高可用的分布式配置
+## 简介
+当服务实例很多时，都从配置中心读取文件，这时可以考虑将配置中心做成一个微服务，将其集群化，从而达到高可用。<br>
+
+把config server作为一个普通的微服务应用，纳入Eureka的服务治理体系中。这样我们的微服务应用就可以通过配置中心的服务名来获取配置信息，服务端的负载均衡配置和客户端的配置中心指定都通过服务治理机制一并解决了，既实现了高可用，也实现了自维护。<br>
+
+## 服务端配置
+### application.yml配置文件
+```
+spring:
+  application:
+    name: config-server
+# Git管理配置
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://gitee.com/didispace/SpringCloud-Learning/
+          search-paths: spring_cloud_in_action/config-repo
+          username:
+          password:
+server:
+  port: 7001
+# 配置服务注册中心
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:1111/eureka/
+```
+### 启动类
+添加@EnableDiscoveryClient和@EnableConfigServer，表示是一个config服务端并向服务中心注册。
+
+## 客户端配置
+```
+spring.application.name=didispace
+server.port=7003
+eureka.client.serviceUrl.defaultZone=http://localhost:1111/eureka/
+spring.cloud.config.discovery.enabled=true
+spring.cloud.config.discovery.serviceId=config-server
+spring.cloud.config.profile=dev
+```
+>spring.cloud.config.discovery.enabled=true：开启通过服务访问Config Server的功能<br>
+spring.cloud.config.discovery.serviceId=config-server：指定Config Server注册的服务名<br>
+
+**这里使用Config Server注册的服务名来指定服务，达到负载均衡的作用**
+
+## 从config-server-cluster中读取信息
+```
+@RestController
+public class TestController {
+
+	@Value("${from}")
+	private String from;
+
+	@RequestMapping("from")
+	public String from(){
+		return from;
+	}
+}
+```
+
+
