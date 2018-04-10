@@ -6,8 +6,8 @@ spring:
     config:
       server:
         git:
-          uri: https://gitee.com/didispace/SpringCloud-Learning/
-          search-paths: spring_cloud_in_action/config-repo
+          uri: https://github.com/wa1ker77/spring-cloud-sample/
+          search-paths: spring_cloud_config_repository
           username:
           password:
 server:
